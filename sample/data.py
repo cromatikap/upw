@@ -6,3 +6,6 @@ def createUser(user):
 
 def isUserExists(user):
     return os.path.isfile(cfg.get('UPW_DIR') + user['hash'])
+
+def addDomain(domain, user):
+    print('\nADD ' + domain + ' TO ' + user['login'] + '\'S PROFILE\n')

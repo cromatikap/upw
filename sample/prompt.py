@@ -87,6 +87,7 @@ def select_domain(user):
         if(domain == 'options'):
             options(user)
         else:
+            data.addDomain(domain, user)
             clipboard.copy(password.generate(user['masterkey'], domain))
             print('* Copied to clipboard.')
             print('Type `delete` to remove ' + domain + ' from your profile.')
