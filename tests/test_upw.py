@@ -1,6 +1,6 @@
 import unittest, sys, os
 sys.path.append(os.path.abspath('../sample'))
-import upw
+from sample import upw
 
 class authenticate(unittest.TestCase):
 

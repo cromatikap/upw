@@ -1,10 +1,10 @@
 # MicroPassword: `upw`
 
-## The simplestm, fastest and most secure password manager in the world
+## Simple, fast and secure passwords manager
 
-- pure cryptography only
-- offline
-- trustless
+- off-line
+- no third-party involved
+- passwords recoverable from any device with upw installed on
 - confidential UX
 
 Inspired from MasterPassword (`mpw`). Written in python.
@@ -45,4 +45,10 @@ See more in `config.yaml`
 ```
 $ pip install -r requirements.txt
 $ python main.py
+```
+
+# Unit test
+
+```
+$ python -m unittest
 ```
