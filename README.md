@@ -5,7 +5,7 @@
 - off-line
 - no third-party involved
 - passwords recoverable from any device with upw installed on
-- confidential UX
+- confidential CLI
 
 Inspired from MasterPassword (`mpw`). Written in python.
 
