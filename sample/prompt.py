@@ -1,4 +1,3 @@
-
 import getpass, os, sys, clipboard
 from sample import upw, cfg, password, lib
 from .User import User
@@ -30,7 +29,7 @@ def create(user):
     MasterPasswordConfirmation = getpass.getpass(prompt='* Master Password: ', stream = None)
     # if(upw.authenticate(user['login'], MasterPasswordConfirmation)['hash'] == user['hash']):
     if(User(user.login, MasterPasswordConfirmation).hash == user.hash):
-        user.create_config()
+        user.create()
         print('\n*** High five ' + user.login + '! ***\n')
         print('* Your encrypted profile has been created:')
         print('\n ' + cfg.get('UPW_DIR') + user.hash + '\n')
@@ -44,7 +43,7 @@ def authenticate(user):
     print('\nEmojish: *** [ ' + user.emojish + ' ] ***\n\n')
 
     # Is this user has a file in .upw/ ?
-    if(user.is_config_exists()):
+    if(user.import_profile()):
         print('* A matching profile has been found: ')
         print('\n ' + cfg.get('UPW_DIR') + user.hash)
         print()
@@ -70,13 +69,19 @@ def authenticate(user):
             sys.exit(0)
 
 def options():
-    print('options menu')
-    input('DEBUG Press enter to continue...')
+    os.system('clear')
+    print('-------------- μPassword: options ---------------')
+    print('***                                           ***')
+    print('***             Work in progress              ***')
+    print('***                     :)                    ***')
+    print('***                                           ***')
+    print('-------------------------------------------------')
+    input('\n-> Press enter to continue...')
 
 def select_domain(user):
     while 1:
         os.system('clear')
-        print('Type `options` to access your profile options.\n')
+        print('-> Type `options` to access your profile options.\n')
         domain = prompt('[ ' + user.emojish + ' ] <' + user.login + '> Domain: ',
             completer=WordCompleter(user.get_domains())
             # history=FileHistory(cfg.get('UPW_DIR') + 'history.txt'),
@@ -85,11 +90,12 @@ def select_domain(user):
         if(domain == 'options'):
             options()
         else:
-            user.add_domain(domain)
             clipboard.copy(password.generate(user.masterkey, domain))
-            print('* Copied to clipboard.')
-            print('Type `delete` to remove ' + domain + ' from your profile.')
-            print('Press enter to continue...')
+            print('\n*** Copied to clipboard. ***\n')
+            if(user.add_domain(domain)):
+                print('This domain has been added to your profile!\n')
+            print('-> Type `delete` to remove ' + domain + ' from your profile.')
+            print('-> Press enter to continue.')
             keypress = input()
             if(keypress == 'delete'):
                 print('profile deleted')
