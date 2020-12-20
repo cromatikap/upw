@@ -1,11 +1,12 @@
-import os.path
+import os.path, json
 from sample import upw, cfg
 
-def createUser(user):
+def create_user(user):
     f = open(cfg.get('UPW_DIR') + user['hash'], "a")
 
-def isUserExists(user):
+def is_user_exists(user):
     return os.path.isfile(cfg.get('UPW_DIR') + user['hash'])
 
-def addDomain(domain, user):
+def add_domain(domain, user):
     print('\nADD ' + domain + ' TO ' + user['login'] + '\'S PROFILE\n')
+    f = open(cfg.get('UPW_DIR') + user['hash'], "a")

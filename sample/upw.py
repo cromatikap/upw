@@ -5,7 +5,7 @@ from . import cfg
 with open('config.yml', 'r') as file:
     cfg = yaml.safe_load(file)
 
-def deriveKeyFrom(key1, key2):
+def derive_key_from(key1, key2):
     hash = cfg.get('hash')
     pk = hashlib.pbkdf2_hmac(hash['name'], key1.encode() + key2.encode(), hash['salt'].encode(), cfg['hash']['dklen'])
     return pk.hex()
@@ -20,7 +20,7 @@ def authenticate(Login, MasterPassword):
         # for i in input:
         #     print(cfg.get('emojish_list')[int(i, 16)])
 
-    masterkey = deriveKeyFrom(Login, MasterPassword)
+    masterkey = derive_key_from(Login, MasterPassword)
     MasterPassword = None # Make sure Master Password typed by the user is no longer in memory
     user = dict()
     user['login'] = Login

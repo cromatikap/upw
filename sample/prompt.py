@@ -28,7 +28,7 @@ def create(user):
     print('* login: ' + user['login'])
     MasterPasswordConfirmation = getpass.getpass(prompt='* Master Password: ', stream = None)
     if(upw.authenticate(user['login'], MasterPasswordConfirmation)['hash'] == user['hash']):
-        data.createUser(user)
+        data.create_user(user)
         print('\n*** High five ' + user['login'] + '! ***\n')
         print('* Your encrypted profile has been created:')
         print('\n ' + cfg.get('UPW_DIR') + user['hash'] + '\n')
@@ -42,7 +42,7 @@ def authenticate(user):
     print('\nEmojish: *** [ ' + user['emojish'] + ' ] ***\n\n')
 
     # Is this user has a file in .upw/ ?
-    if(data.isUserExists(user)):
+    if(data.is_user_exists(user)):
         print('* A matching profile has been found: ')
         print('\n ' + cfg.get('UPW_DIR') + user['hash'])
         print()
@@ -87,7 +87,7 @@ def select_domain(user):
         if(domain == 'options'):
             options(user)
         else:
-            data.addDomain(domain, user)
+            data.add_domain(domain, user)
             clipboard.copy(password.generate(user['masterkey'], domain))
             print('* Copied to clipboard.')
             print('Type `delete` to remove ' + domain + ' from your profile.')
