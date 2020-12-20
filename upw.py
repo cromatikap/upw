@@ -3,7 +3,7 @@ from sample import prompt
 
 os.environ["XDG_SESSION_TYPE"] = "" # Prevent warning related to clipboard and Wayland on Gnome
 
-print('upw-0.0.1')
+print('upw-0.1.0')
 print()
 
 try:
