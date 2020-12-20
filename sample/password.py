@@ -5,15 +5,15 @@ def generate(masterkey, domain):
     pk = upw.derive_key_from(masterkey, domain)
     pkResized = pk[0:cfg.get('passwords_length')]
 
-    c = Counters()
+    c = dict(digit=0, letter=0)
     password = ''
     for char in pkResized:
         if char.isdigit():
-            password += process_digits(char, c.digit)
-            c.digit += 1
+            password += process_digits(char, c["digit"])
+            c["digit"] += 1
         else:
-            password += process_letters(char, c.letter)
-            c.letter += 1
+            password += process_letters(char, c["letter"])
+            c["letter"] += 1
 
     return password
 
@@ -31,8 +31,3 @@ def process_digits(digit, c):
         return specialCharList[math.ceil(c / 2) - 1]
     else:
         return digit
-
-class Counters:
-    def __init__(self):
-        self.digit = 0
-        self.letter = 0
