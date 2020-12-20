@@ -1,6 +1,7 @@
 
 import getpass, os, sys, clipboard
-from sample import upw, cfg, password, data, lib
+from sample import upw, cfg, password, lib
+from .User import User
 from prompt_toolkit import prompt
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
@@ -14,24 +15,25 @@ def identify():
 
     Login = input("* Login: ")
     MasterPassword = getpass.getpass(prompt='* Master Password: ', stream = None)
-    user = upw.authenticate(Login, MasterPassword)
+    user = User(Login, MasterPassword)
     MasterPassword = None # Make sure Master Password typed by the user is no longer in memory
 
-    print('\nEmojish: *** [ ' + user['emojish'] + ' ] ***')
+    print('\nEmojish: *** [ ' + user.emojish + ' ] ***')
     return user
     # DEBUG:
-    # return upw.authenticate('user name', 'masterpassword')
+    # return User('user name', 'masterpassword')
 
 def create(user):
     print('\n* Please confirm the master password you typed')
     print('  before.\n')
-    print('* login: ' + user['login'])
+    print('* login: ' + user.login)
     MasterPasswordConfirmation = getpass.getpass(prompt='* Master Password: ', stream = None)
-    if(upw.authenticate(user['login'], MasterPasswordConfirmation)['hash'] == user['hash']):
-        data.create_user(user)
-        print('\n*** High five ' + user['login'] + '! ***\n')
+    # if(upw.authenticate(user['login'], MasterPasswordConfirmation)['hash'] == user['hash']):
+    if(User(user.login, MasterPasswordConfirmation).hash == user.hash):
+        user.create_config()
+        print('\n*** High five ' + user.login + '! ***\n')
         print('* Your encrypted profile has been created:')
-        print('\n ' + cfg.get('UPW_DIR') + user['hash'] + '\n')
+        print('\n ' + cfg.get('UPW_DIR') + user.hash + '\n')
     else:
         print('\n* The password doesn\'t match with the first\n  typed in.\n')
         sys.exit(0)
@@ -39,12 +41,12 @@ def create(user):
 def authenticate(user):
 
     print('\n- 2. Authentication -\n')
-    print('\nEmojish: *** [ ' + user['emojish'] + ' ] ***\n\n')
+    print('\nEmojish: *** [ ' + user.emojish + ' ] ***\n\n')
 
     # Is this user has a file in .upw/ ?
-    if(data.is_user_exists(user)):
+    if(user.is_config_exists()):
         print('* A matching profile has been found: ')
-        print('\n ' + cfg.get('UPW_DIR') + user['hash'])
+        print('\n ' + cfg.get('UPW_DIR') + user.hash)
         print()
 
     else:
@@ -67,28 +69,24 @@ def authenticate(user):
         else:
             sys.exit(0)
 
-def options(user):
+def options():
     print('options menu')
     input('DEBUG Press enter to continue...')
 
 def select_domain(user):
-    html_completer = WordCompleter(
-        ['options', 'facebook.com', 'twitter.com', 'linkedin.com', 'gmail.com', 'elektr.io']
-    )
-
     while 1:
         os.system('clear')
         print('Type `options` to access your profile options.\n')
-        domain = prompt('[ ' + user['emojish'] + ' ] <' + user['login'] + '> Domain: ',
-            history=FileHistory(cfg.get('UPW_DIR') + 'history.txt'),
-            auto_suggest=AutoSuggestFromHistory(),
-            completer=html_completer
+        domain = prompt('[ ' + user.emojish + ' ] <' + user.login + '> Domain: ',
+            completer=WordCompleter(user.get_domains())
+            # history=FileHistory(cfg.get('UPW_DIR') + 'history.txt'),
+            # auto_suggest=AutoSuggestFromHistory(),
             )
         if(domain == 'options'):
-            options(user)
+            options()
         else:
-            data.add_domain(domain, user)
-            clipboard.copy(password.generate(user['masterkey'], domain))
+            user.add_domain(domain)
+            clipboard.copy(password.generate(user.masterkey, domain))
             print('* Copied to clipboard.')
             print('Type `delete` to remove ' + domain + ' from your profile.')
             print('Press enter to continue...')
