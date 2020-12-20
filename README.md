@@ -20,9 +20,9 @@ upw provides a keys derivation tree from a login (confidential key) and a master
 - 1 digit on 2 is replaced by a special char from `spec_char_list` in `config.yml` following the array order reading
 
 Example:
-dC7b#5D%0b$8^Ac8
-d3E#1%3aB$9^aDa6
-2fD#4f%E7cD$3^7b
+- dC7b#5D%0b$8^Ac8
+- d3E#1%3aB$9^aDa6
+- 2fD#4f%E7cD$3^7b
 
 ## Derivation tree:
 
