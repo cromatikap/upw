@@ -23,10 +23,7 @@ def identify():
     # return User('user name', 'masterpassword')
 
 def create(user):
-    print('\n* Please confirm the master password you typed')
-    print('  before.\n')
-    print('* login: ' + user.login)
-    MasterPasswordConfirmation = getpass.getpass(prompt='* Master Password: ', stream = None)
+    MasterPasswordConfirmation = getpass.getpass(prompt='', stream = None)
     # if(upw.authenticate(user['login'], MasterPasswordConfirmation)['hash'] == user['hash']):
     if(User(user.login, MasterPasswordConfirmation).hash == user.hash):
         user.create()
@@ -43,30 +40,14 @@ def authenticate(user):
     print('\nEmojish: *** [ ' + user.emojish + ' ] ***\n\n')
 
     # Is this user has a file in .upw/ ?
+    print('* Checking for a matching profile\n  at ' + cfg.get('UPW_DIR') + user.hash + '...')
     if(user.import_profile()):
-        print('* A matching profile has been found: ')
-        print('\n ' + cfg.get('UPW_DIR') + user.hash)
-        print()
+        print('-> Profile found.')
+        print('\n- Welcome back ' + user.login + '! -\n')
 
     else:
-        print('-------------- Welcome to μPassword -------------')
-        print('***                                           ***')
-        print('***           You are about to create         ***')
-        print('***      a new login/master password pair     ***')
-        print('***                                           ***')
-        print('-------------------------------------------------')
-        print()
-        print('* If this is what you want, type `confirm` below')
-        print()
-        print('* If you\'re trying to authenticate with a login')
-        print('  you\'ve already made before on this device, you')
-        print('  likely mistyped your master password.')
-        print('  Just press [Enter] :)')
-        print()
-        if(input('> ') == 'confirm'):
-            create(user)
-        else:
-            sys.exit(0)
+        print('-> Profile not found. Creating a new one...\n  Please confirm your master password:')
+        create(user)
 
 def options():
     os.system('clear')

@@ -43,12 +43,13 @@ See more in `config.yaml`
 # Run instructions
 
 ```
-$ pip install -r requirements.txt
-$ python main.py
+$ source env/bin/activate
+$ pip3 install -r requirements.txt
+$ python3 upw.py
 ```
 
 # Unit test
 
 ```
-$ python -m unittest
+$ python3 -m unittest
 ```
