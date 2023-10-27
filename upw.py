@@ -15,4 +15,6 @@ try:
 
 except KeyboardInterrupt:
     os.system('clear')
+    if('user' in vars()):
+        user.save_profile()
     print('\n* Bye.')
