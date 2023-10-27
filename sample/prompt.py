@@ -26,7 +26,7 @@ def create(user):
     MasterPasswordConfirmation = getpass.getpass(prompt='', stream = None)
     # if(upw.authenticate(user['login'], MasterPasswordConfirmation)['hash'] == user['hash']):
     if(User(user.login, MasterPasswordConfirmation).hash == user.hash):
-        user.create()
+        user.update_profile()
         print('\n*** High five ' + user.login + '! ***\n')
         print('* Your encrypted profile has been created:')
         print('\n ' + cfg.get('UPW_DIR') + user.hash + '\n')

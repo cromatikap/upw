@@ -37,6 +37,7 @@ Login + Master Password (Example: user + pwd)
 ## Algorithms used for critical computations
 
 - Keys derivation: `hashlib.pbkdf2_hmac`
+- User profile file encryption: `cryptography.fernet`
 
 See more in `config.yaml`
 

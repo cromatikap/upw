@@ -1,4 +1,4 @@
-import getpass, yaml, hashlib
+import yaml, hashlib
 from hashlib import blake2s
 from . import cfg
 

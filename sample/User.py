@@ -1,5 +1,5 @@
 import os.path, json
-from sample import upw, cfg
+from sample import upw, cfg, Crypto
 
 class User:
     """Define a user gerated from the couple login/master_password
@@ -10,24 +10,30 @@ class User:
     def __init__(self, login, master_password):
         self.login = login
         self.masterkey = upw.derive_key_from(login, master_password)
+        self.Crypto = Crypto.Crypto(self.masterkey)
         self.hash = upw.hash(login + self.masterkey)[0:40]
         self.emojish = upw.emojish(self.hash)
 
-    def create(self):
-        f = open(cfg.get('UPW_DIR') + self.hash, "a", encoding="utf-8")
-        json.dump(self.profile, f, ensure_ascii=False)
+    def save_profile(self):
+        f = open(cfg.get('UPW_DIR') + self.hash, "wb")
+        f.write(self.Crypto.encrypt(self.profile))
         f.close()
         self.authenticated = True
 
     def import_profile(self):
         try:
             f = open(cfg.get('UPW_DIR') + self.hash, "r", encoding="utf-8")
-            self.profile = json.load(f)
+            content = f.read()
+            self.profile = self.Crypto.decrypt(content)
             f.close()
             self.authenticated = True
             return True
         except OSError:
             return False
+    
+    def update_profile(self):
+        if self.authenticated:
+            self.create_profile()
 
     def add_domain(self, domain):
         try:
@@ -39,9 +45,3 @@ class User:
 
     def get_domains(self):
         return self.profile["domains"]
-
-    def save_profile(self):
-        if self.authenticated:
-            f = open(cfg.get('UPW_DIR') + self.hash, "w", encoding="utf-8")
-            json.dump(self.profile, f, ensure_ascii=False)
-            f.close()
