@@ -1,5 +1,5 @@
 import getpass, os, sys, clipboard
-from sample import upw, cfg, password, lib
+from sample import cfg, password, lib
 from .User import User
 from prompt_toolkit import prompt
 from prompt_toolkit.history import FileHistory

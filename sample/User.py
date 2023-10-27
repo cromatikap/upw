@@ -1,5 +1,4 @@
-import os.path, json
-from sample import upw, cfg, Crypto
+from sample import cfg, Crypto
 
 class User:
     """Define a user gerated from the couple login/master_password
@@ -9,10 +8,10 @@ class User:
     
     def __init__(self, login, master_password):
         self.login = login
-        self.masterkey = upw.derive_key_from(login, master_password)
+        self.masterkey = Crypto.derive_key_from(login, master_password)
         self.Crypto = Crypto.Crypto(self.masterkey)
-        self.hash = upw.hash(login + self.masterkey)[0:40]
-        self.emojish = upw.emojish(self.hash)
+        self.hash = Crypto.hash(login + self.masterkey)[0:40]
+        self.emojish = Crypto.emojish(self.hash)
 
     def save_profile(self):
         f = open(cfg.get('UPW_DIR') + self.hash, "wb")
