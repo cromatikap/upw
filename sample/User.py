@@ -32,7 +32,7 @@ class User:
     
     def update_profile(self):
         if self.authenticated:
-            self.create_profile()
+            self.save_profile()
 
     def add_domain(self, domain):
         try:
