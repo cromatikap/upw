@@ -1,10 +1,8 @@
 import getpass, os, sys, clipboard
-from sample import cfg, password, lib
+from sample import cfg, password
+from .DomainCompleter import DomainCompleter
 from .User import User
 from prompt_toolkit import prompt
-from prompt_toolkit.history import FileHistory
-from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-from prompt_toolkit.completion import WordCompleter
 
 def identify():
 
@@ -63,13 +61,15 @@ def select_domain(user):
     while 1:
         os.system('clear')
         print('-> Type `options` to access your profile options.\n')
-        domain = prompt('[ ' + user.emojish + ' ] <' + user.login + '> Domain: ',
-            completer=WordCompleter(user.get_domains())
-            # history=FileHistory(cfg.get('UPW_DIR') + 'history.txt'),
-            # auto_suggest=AutoSuggestFromHistory(),
-            )
+        domain = prompt(
+            '[ ' + user.emojish + ' ] <' + user.login + '> Domain: ',
+            completer=DomainCompleter(user.get_domains())
+        )
         if(domain == 'options'):
             options()
+        elif(domain == cfg.get('options')['display_domains_list']):
+            print('\n' + str(user.get_domains()) + '\n')
+            input('-> Press enter to continue...')
         else:
             clipboard.copy(password.generate(user.masterkey, domain))
             print('\n*** Copied to clipboard. ***\n')
