@@ -68,7 +68,10 @@ def select_domain(user):
         if(domain == 'options'):
             options()
         elif(domain == cfg.get('options')['display_domains_list']):
-            print('\n' + str(user.get_domains()) + '\n')
+            domains = user.get_domains()
+            domains.sort()
+            for domain in domains:
+                print(domain)
             input('-> Press enter to continue...')
         else:
             clipboard.copy(password.generate(user.masterkey, domain))
