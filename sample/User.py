@@ -41,6 +41,13 @@ class User:
         except ValueError:
             self.profile["domains"].append(domain)
             return True
+    
+    def del_domain(self, domain):
+        try:
+            self.profile["domains"].remove(domain)
+            return True
+        except ValueError:
+            return False
 
     def get_domains(self):
         return self.profile["domains"]

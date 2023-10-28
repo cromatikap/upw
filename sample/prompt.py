@@ -82,4 +82,5 @@ def select_domain(user):
             print('-> Press enter to continue.')
             keypress = input()
             if(keypress == 'delete'):
+                user.del_domain(domain)
                 print('profile deleted')
