@@ -28,9 +28,39 @@ class Crypto:
         s = self.fernet.decrypt(json_profile).decode('utf-8')
         return json.loads(s)
 
-def derive_key_from(key1: str, key2: str) -> str:
+def derive_key_from(key1: str | bytes | bytearray, key2: str | bytes | bytearray) -> str:
+    """Derive a key from two input keys using PBKDF2.
+    
+    Args:
+        key1: First key (can be str, bytes, or bytearray)
+        key2: Second key (can be str, bytes, or bytearray)
+        
+    Returns:
+        Hex-encoded derived key
+    """
     hash_config = cfg.get('hash')
-    pk = hashlib.pbkdf2_hmac(hash_config['name'], key1.encode() + key2.encode(), hash_config['salt'].encode(), hash_config['dklen'])
+    
+    # Convert to bytes if needed
+    if isinstance(key1, str):
+        key1_bytes = key1.encode('utf-8')
+    elif isinstance(key1, bytearray):
+        key1_bytes = bytes(key1)  # Create bytes copy from bytearray
+    else:
+        key1_bytes = key1  # Already bytes
+    
+    if isinstance(key2, str):
+        key2_bytes = key2.encode('utf-8')
+    elif isinstance(key2, bytearray):
+        key2_bytes = bytes(key2)  # Create bytes copy from bytearray
+    else:
+        key2_bytes = key2  # Already bytes
+    
+    pk = hashlib.pbkdf2_hmac(
+        hash_config['name'], 
+        key1_bytes + key2_bytes, 
+        hash_config['salt'].encode(), 
+        hash_config['dklen']
+    )
     return pk.hex()
 
 def hash(input: str) -> str:

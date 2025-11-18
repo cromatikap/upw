@@ -1,10 +1,12 @@
 import unittest
-from sample import user
+from sample import user, crypto
 
 class TestUser(unittest.TestCase):
 
     def setUp(self):
-        self.u = user.User('login', 'master_password')
+        # Derive masterkey first, then pass to User (matches new API)
+        masterkey = crypto.derive_key_from('login', 'master_password')
+        self.u = user.User('login', masterkey)
     
     def test_instanciate(self):
         self.assertEqual(self.u.login, 'login')

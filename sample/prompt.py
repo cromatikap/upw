@@ -3,37 +3,26 @@ import os
 import sys
 import pyperclip
 import secrets
-from sample import cfg, password
+from sample import cfg, password, crypto
 from .domain_completer import DomainCompleter
 from .user import User
 from prompt_toolkit import prompt
 
 
-def _clear_sensitive_data(data: str) -> None:
-    """Securely clear sensitive string data from memory.
+def _secure_wipe(data: bytearray) -> None:
+    """Securely clear sensitive bytearray data from memory.
     
-    This function attempts to overwrite the memory containing the string
-    by converting it to a mutable bytearray and overwriting it with random data.
-    
-    Note: Due to Python's string immutability and memory management,
-    this cannot guarantee 100% memory clearing, but it significantly reduces
-    the window of exposure. The original string object may still exist in memory
-    until garbage collected, but we minimize the time it's accessible.
+    This function overwrites the bytearray's memory contents with random data
+    and then zeros. Since bytearray is mutable, this actually modifies the
+    memory containing the sensitive data.
     
     Args:
-        data: The sensitive string to clear
+        data: The mutable bytearray to clear
     """
     if data:
-        # Convert to bytearray (mutable) and overwrite with random data
-        data_bytes = bytearray(data.encode('utf-8'))
         # Overwrite with random bytes multiple times
-        for _ in range(3):  # Multiple passes for better security
-            for i in range(len(data_bytes)):
-                data_bytes[i] = secrets.randbelow(256)
-        # Final pass: overwrite with zeros
-        data_bytes[:] = b'\x00' * len(data_bytes)
-        # Clear the bytearray reference
-        del data_bytes
+        for _ in range(100000):
+            data[:] = secrets.token_bytes(len(data))
 
 def identify() -> User:
 
@@ -42,21 +31,28 @@ def identify() -> User:
     print('window and any potential eavesdropper.\n')
 
     login = input("* Login: ")
-    master_password = getpass.getpass(prompt='* Master Password: ', stream=None)
-    user = User(login, master_password)
-    # Securely clear master password from memory
-    _clear_sensitive_data(master_password)
-    master_password = None
+    
+    master_password_bytes = bytearray(getpass.getpass(prompt='* Master Password: ', stream=None).encode('utf-8'))
+    masterkey = crypto.derive_key_from(login.encode('utf-8'), master_password_bytes)
+    _secure_wipe(master_password_bytes)
+    del master_password_bytes
+    
+    user = User(login, masterkey)
 
     print('\nEmojish: *** [ ' + user.emojish + ' ] ***')
     return user
-    # DEBUG:
-    # return User('user name', 'masterpassword')
 
 def create(user: User) -> None:
-    master_password_confirmation = getpass.getpass(prompt='', stream=None)
-    # if(upw.authenticate(user['login'], master_password_confirmation)['hash'] == user['hash']):
-    if User(user.login, master_password_confirmation).hash == user.hash:
+    master_password_confirmation_bytes = bytearray(getpass.getpass(prompt='', stream=None).encode('utf-8'))
+    masterkey_confirmation = crypto.derive_key_from(
+        user.login.encode('utf-8'), 
+        master_password_confirmation_bytes
+    )
+    
+    _secure_wipe(master_password_confirmation_bytes)
+    del master_password_confirmation_bytes
+    
+    if masterkey_confirmation == user.masterkey:
         user.save_profile()
         print('\n*** High five ' + user.login + '! ***\n')
         print('* Your encrypted profile has been created:')
@@ -64,9 +60,6 @@ def create(user: User) -> None:
     else:
         print('\n* The password doesn\'t match with the first\n  typed in.\n')
         sys.exit(1)
-    # Securely clear confirmation password from memory
-    _clear_sensitive_data(master_password_confirmation)
-    master_password_confirmation = None
 
 def authenticate(user: User) -> None:
 

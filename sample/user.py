@@ -14,10 +14,15 @@ class User:
     authenticated: bool = False
     profile: Dict[str, list[str]] = {"domains": []}
     
-    def __init__(self, login: str, master_password: str) -> None:
-        """Initialize user from login and master password."""
+    def __init__(self, login: str, masterkey: str) -> None:
+        """Initialize user from login and masterkey (derived key, not raw password).
+        
+        Args:
+            login: User login identifier
+            masterkey: Derived key from login + master password (already computed)
+        """
         self.login: str = login
-        self.masterkey: str = crypto.derive_key_from(login, master_password)
+        self.masterkey: str = masterkey
         self.crypto: crypto.Crypto = crypto.Crypto(self.masterkey)
         self.hash: str = crypto.hash(login + self.masterkey)[0:40]
         self.emojish: str = crypto.emojish(self.hash)
