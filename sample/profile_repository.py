@@ -2,8 +2,7 @@ import os
 import stat
 import jsonschema
 from typing import Dict, Any, Optional
-from sample import cfg
-from sample.Crypto import Crypto
+from sample import cfg, crypto
 
 # JSON schema for profile structure validation
 PROFILE_SCHEMA: Dict[str, Any] = {
@@ -32,7 +31,7 @@ class ProfileRepository:
     - Setting file permissions
     """
     
-    def __init__(self, crypto: Crypto, profile_hash: str) -> None:
+    def __init__(self, crypto: crypto, profile_hash: str) -> None:
         """Initialize repository with encryption and profile identifier.
         
         Args:

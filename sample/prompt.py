@@ -3,8 +3,8 @@ import os
 import sys
 import pyperclip
 from sample import cfg, password
-from .DomainCompleter import DomainCompleter
-from .User import User
+from .domain_completer import DomainCompleter
+from .user import User
 from prompt_toolkit import prompt
 
 def identify() -> User:

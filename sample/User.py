@@ -1,5 +1,5 @@
 from typing import Dict
-from sample import Crypto
+from sample import crypto
 from sample.profile_repository import ProfileRepository
 
 class User:
@@ -17,10 +17,10 @@ class User:
     def __init__(self, login: str, master_password: str) -> None:
         """Initialize user from login and master password."""
         self.login: str = login
-        self.masterkey: str = Crypto.derive_key_from(login, master_password)
-        self.crypto: Crypto.Crypto = Crypto.Crypto(self.masterkey)
-        self.hash: str = Crypto.hash(login + self.masterkey)[0:40]
-        self.emojish: str = Crypto.emojish(self.hash)
+        self.masterkey: str = crypto.derive_key_from(login, master_password)
+        self.crypto: crypto.Crypto = crypto.Crypto(self.masterkey)
+        self.hash: str = crypto.hash(login + self.masterkey)[0:40]
+        self.emojish: str = crypto.emojish(self.hash)
         
         # Initialize repository for file operations
         self._repository: ProfileRepository = ProfileRepository(

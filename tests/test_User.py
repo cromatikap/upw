@@ -1,10 +1,10 @@
 import unittest
-from sample import User
+from sample import user
 
 class TestUser(unittest.TestCase):
 
     def setUp(self):
-        self.u = User.User('login', 'master_password')
+        self.u = user.User('login', 'master_password')
     
     def test_instanciate(self):
         self.assertEqual(self.u.login, 'login')

@@ -1,8 +1,8 @@
-from . import Crypto, cfg
+from . import crypto, cfg
 import math
 
 def generate(masterkey: str, domain: str) -> str:
-    pk = Crypto.derive_key_from(masterkey, domain)
+    pk = crypto.derive_key_from(masterkey, domain)
     pk_resized = pk[0:cfg.get('passwords_length')]
 
     counters = dict(digit=0, letter=0)

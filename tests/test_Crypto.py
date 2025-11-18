@@ -1,10 +1,10 @@
 import unittest
-from sample import Crypto
+from sample import crypto
 
 class TestCrypto(unittest.TestCase):
 
     def setUp(self):
-        self.c = Crypto.Crypto('password')
+        self.c = crypto.Crypto('password')
 
     def test_instanciate(self):
         self.assertEqual(self.c.fernet._encryption_key, b'x<\xe8\x95\x8f5j\x83\x1dr\x05\xaaU\xc3%\x14')
@@ -17,10 +17,10 @@ class TestCrypto(unittest.TestCase):
 class derive_key_from(unittest.TestCase):
 
     def test_knownHash(self):
-        self.assertTrue(Crypto.derive_key_from('masterkey', 'domain.ltd') == 'f9d5d47b84fa29e7aa79ffed83e74ba9acf20ccb06a622b6a824b8a66fd79122')
+        self.assertTrue(crypto.derive_key_from('masterkey', 'domain.ltd') == 'f9d5d47b84fa29e7aa79ffed83e74ba9acf20ccb06a622b6a824b8a66fd79122')
 
 class hash(unittest.TestCase):
 
     def test_hash(self):
-        self.assertEqual(Crypto.hash('abc'), 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad')
-        self.assertEqual(Crypto.hash('qwerty'), '65e84be33532fb784c48129675f9eff3a682b27168c0ea744b2cf58ee02337c5')
+        self.assertEqual(crypto.hash('abc'), 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad')
+        self.assertEqual(crypto.hash('qwerty'), '65e84be33532fb784c48129675f9eff3a682b27168c0ea744b2cf58ee02337c5')

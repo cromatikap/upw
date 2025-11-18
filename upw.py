@@ -1,6 +1,6 @@
 import os
 from sample import prompt
-from sample.User import User
+from sample.user import User
 
 os.environ["XDG_SESSION_TYPE"] = "" # Prevent warning related to clipboard and Wayland on Gnome
 
