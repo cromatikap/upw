@@ -1,10 +1,11 @@
 import os
 import stat
 import jsonschema
+from typing import Dict, Any
 from sample import cfg, Crypto
 
 # JSON schema for profile structure validation
-PROFILE_SCHEMA = {
+PROFILE_SCHEMA: Dict[str, Any] = {
     "type": "object",
     "properties": {
         "domains": {
@@ -21,27 +22,27 @@ PROFILE_SCHEMA = {
 class User:
     """Define a user gerated from the couple login/master_password
        and manage its local configuration file."""
-    authenticated = False
-    profile = {"domains": []}
+    authenticated: bool = False
+    profile: Dict[str, list[str]] = {"domains": []}
     
-    def __init__(self, login, master_password):
-        self.login = login
-        self.masterkey = Crypto.derive_key_from(login, master_password)
-        self.crypto = Crypto.Crypto(self.masterkey)
-        self.hash = Crypto.hash(login + self.masterkey)[0:40]
-        self.emojish = Crypto.emojish(self.hash)
+    def __init__(self, login: str, master_password: str) -> None:
+        self.login: str = login
+        self.masterkey: str = Crypto.derive_key_from(login, master_password)
+        self.crypto: Crypto.Crypto = Crypto.Crypto(self.masterkey)
+        self.hash: str = Crypto.hash(login + self.masterkey)[0:40]
+        self.emojish: str = Crypto.emojish(self.hash)
 
-    def _ensure_profile_dir(self):
+    def _ensure_profile_dir(self) -> None:
         """Ensure the profile directory exists."""
         profile_dir = cfg.get('UPW_DIR')
         if not os.path.exists(profile_dir):
             os.makedirs(profile_dir, mode=0o700)  # rwx------ permissions
 
-    def _get_profile_path(self):
+    def _get_profile_path(self) -> str:
         """Get the full path to the profile file."""
         return os.path.join(cfg.get('UPW_DIR'), self.hash)
 
-    def _validate_profile(self, profile_data):
+    def _validate_profile(self, profile_data: Dict[str, Any]) -> None:
         """Validate the decrypted profile data against the JSON schema.
         
         Args:
@@ -52,7 +53,7 @@ class User:
         """
         jsonschema.validate(instance=profile_data, schema=PROFILE_SCHEMA)
 
-    def save_profile(self):
+    def save_profile(self) -> None:
         """Save the encrypted profile to disk."""
         self._ensure_profile_dir()
         profile_path = self._get_profile_path()
@@ -66,7 +67,7 @@ class User:
         except (OSError, IOError) as e:
             raise RuntimeError(f"Failed to save profile: {e}") from e
 
-    def import_profile(self):
+    def import_profile(self) -> bool:
         """Import and decrypt the profile from disk."""
         profile_path = self._get_profile_path()
         
@@ -90,11 +91,11 @@ class User:
             # Decryption failed (wrong password, corrupted file, etc.)
             return False
     
-    def update_profile(self):
+    def update_profile(self) -> None:
         if self.authenticated:
             self.save_profile()
 
-    def add_domain(self, domain):
+    def add_domain(self, domain: str) -> bool:
         try:
             self.profile["domains"].index(domain)
             return False
@@ -102,12 +103,12 @@ class User:
             self.profile["domains"].append(domain)
             return True
     
-    def del_domain(self, domain):
+    def del_domain(self, domain: str) -> bool:
         try:
             self.profile["domains"].remove(domain)
             return True
         except ValueError:
             return False
 
-    def get_domains(self):
+    def get_domains(self) -> list[str]:
         return self.profile["domains"]

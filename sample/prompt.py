@@ -7,7 +7,7 @@ from .DomainCompleter import DomainCompleter
 from .User import User
 from prompt_toolkit import prompt
 
-def identify():
+def identify() -> User:
 
     print('- 1. Identification -\n')
     print('Make sure to cover your keyboard from any camera,')
@@ -23,7 +23,7 @@ def identify():
     # DEBUG:
     # return User('user name', 'masterpassword')
 
-def create(user):
+def create(user: User) -> None:
     master_password_confirmation = getpass.getpass(prompt='', stream=None)
     # if(upw.authenticate(user['login'], master_password_confirmation)['hash'] == user['hash']):
     if User(user.login, master_password_confirmation).hash == user.hash:
@@ -35,7 +35,7 @@ def create(user):
         print('\n* The password doesn\'t match with the first\n  typed in.\n')
         sys.exit(1)
 
-def authenticate(user):
+def authenticate(user: User) -> None:
 
     print('\n- 2. Authentication -\n')
     print('\nEmojish: *** [ ' + user.emojish + ' ] ***\n\n')
@@ -50,7 +50,7 @@ def authenticate(user):
         print('-> Profile not found. Creating a new one...\n  Please confirm your master password:')
         create(user)
 
-def options():
+def options() -> None:
     os.system('clear')
     print('-------------- μPassword: options ---------------')
     print('***                                           ***')
@@ -60,7 +60,7 @@ def options():
     print('-------------------------------------------------')
     input('\n-> Press enter to continue...')
 
-def select_domain(user):
+def select_domain(user: User) -> None:
     while True:
         os.system('clear')
         print('-> Type `options` to access your profile options.\n')

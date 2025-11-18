@@ -1,6 +1,7 @@
 import base64
 import json
 import hashlib
+from typing import Dict, Any
 from . import cfg
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
@@ -9,7 +10,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 class Crypto:
 
-    def __init__(self, password):
+    def __init__(self, password: str) -> None:
         kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
             length=32,
@@ -17,27 +18,27 @@ class Crypto:
             iterations=390000,
         )
         key = base64.urlsafe_b64encode(kdf.derive(bytes(password, 'utf-8')))
-        self.fernet = Fernet(key)
+        self.fernet: Fernet = Fernet(key)
 
-    def encrypt(self, json_profile):
+    def encrypt(self, json_profile: Dict[str, Any]) -> bytes:
         s = json.dumps(json_profile)
         return self.fernet.encrypt(bytes(s, 'utf-8'))
 
-    def decrypt(self, json_profile):
+    def decrypt(self, json_profile: bytes) -> Dict[str, Any]:
         s = self.fernet.decrypt(json_profile).decode('utf-8')
         return json.loads(s)
 
-def derive_key_from(key1, key2):
+def derive_key_from(key1: str, key2: str) -> str:
     hash_config = cfg.get('hash')
     pk = hashlib.pbkdf2_hmac(hash_config['name'], key1.encode() + key2.encode(), hash_config['salt'].encode(), hash_config['dklen'])
     return pk.hex()
 
-def hash(input):
+def hash(input: str) -> str:
     sha = hashlib.sha256()
     sha.update(input.encode())
     return sha.hexdigest()
 
-def emojish(input):
+def emojish(input: str) -> str:
     emojish1 = cfg.get('emojish_list')[int(input[0], 16)]
     emojish2 = cfg.get('emojish_list')[int(input[-1], 16)]
     return emojish1 + ' ' + emojish2
