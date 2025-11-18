@@ -28,10 +28,14 @@ class TestUser(unittest.TestCase):
     def test_profile_schema_validation(self):
         """Test that invalid profile structures are rejected."""
         import jsonschema
+        from sample.profile_repository import ProfileRepository
+        
+        # Create a repository to test validation
+        repo = ProfileRepository(self.u.crypto, self.u.hash)
         
         # Valid profile should pass validation
         valid_profile = {"domains": ["example.com", "test.com"]}
-        self.u._validate_profile(valid_profile)
+        repo._validate_profile(valid_profile)
         
         # Invalid profiles should raise ValidationError
         invalid_profiles = [
@@ -43,4 +47,4 @@ class TestUser(unittest.TestCase):
         
         for invalid_profile in invalid_profiles:
             with self.assertRaises(jsonschema.ValidationError):
-                self.u._validate_profile(invalid_profile)
+                repo._validate_profile(invalid_profile)

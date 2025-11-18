@@ -1,95 +1,50 @@
-import os
-import stat
-import jsonschema
-from typing import Dict, Any
-from sample import cfg, Crypto
-
-# JSON schema for profile structure validation
-PROFILE_SCHEMA: Dict[str, Any] = {
-    "type": "object",
-    "properties": {
-        "domains": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            }
-        }
-    },
-    "required": ["domains"],
-    "additionalProperties": False
-}
+from typing import Dict
+from sample import Crypto
+from sample.profile_repository import ProfileRepository
 
 class User:
-    """Define a user gerated from the couple login/master_password
-       and manage its local configuration file."""
+    """Represents a user and manages their profile data.
+    
+    This class is responsible for:
+    - User identity (login, masterkey, hash, emojish)
+    - Domain management (add/remove/get domains)
+    - Authentication state
+    - Coordinating with ProfileRepository for persistence
+    """
     authenticated: bool = False
     profile: Dict[str, list[str]] = {"domains": []}
     
     def __init__(self, login: str, master_password: str) -> None:
+        """Initialize user from login and master password."""
         self.login: str = login
         self.masterkey: str = Crypto.derive_key_from(login, master_password)
         self.crypto: Crypto.Crypto = Crypto.Crypto(self.masterkey)
         self.hash: str = Crypto.hash(login + self.masterkey)[0:40]
         self.emojish: str = Crypto.emojish(self.hash)
-
-    def _ensure_profile_dir(self) -> None:
-        """Ensure the profile directory exists."""
-        profile_dir = cfg.get('UPW_DIR')
-        if not os.path.exists(profile_dir):
-            os.makedirs(profile_dir, mode=0o700)  # rwx------ permissions
-
-    def _get_profile_path(self) -> str:
-        """Get the full path to the profile file."""
-        return os.path.join(cfg.get('UPW_DIR'), self.hash)
-
-    def _validate_profile(self, profile_data: Dict[str, Any]) -> None:
-        """Validate the decrypted profile data against the JSON schema.
         
-        Args:
-            profile_data: The decrypted profile dictionary to validate
-            
-        Raises:
-            jsonschema.ValidationError: If the profile data doesn't match the schema
-        """
-        jsonschema.validate(instance=profile_data, schema=PROFILE_SCHEMA)
+        # Initialize repository for file operations
+        self._repository: ProfileRepository = ProfileRepository(
+            self.crypto, 
+            self.hash
+        )
 
     def save_profile(self) -> None:
-        """Save the encrypted profile to disk."""
-        self._ensure_profile_dir()
-        profile_path = self._get_profile_path()
-        
-        try:
-            with open(profile_path, "wb") as f:
-                f.write(self.crypto.encrypt(self.profile))
-            # Set file permissions to 600 (rw-------) for security
-            os.chmod(profile_path, stat.S_IRUSR | stat.S_IWUSR)
-            self.authenticated = True
-        except (OSError, IOError) as e:
-            raise RuntimeError(f"Failed to save profile: {e}") from e
+        """Save the current profile to disk."""
+        self._repository.save(self.profile)
+        self.authenticated = True
 
     def import_profile(self) -> bool:
-        """Import and decrypt the profile from disk."""
-        profile_path = self._get_profile_path()
+        """Import profile from disk if it exists.
         
-        try:
-            with open(profile_path, "rb") as f:  # Binary mode for encrypted data
-                encrypted_content = f.read()
-            decrypted_profile = self.crypto.decrypt(encrypted_content)
-            # Validate the decrypted data structure
-            self._validate_profile(decrypted_profile)
-            self.profile = decrypted_profile
+        Returns:
+            True if profile was loaded successfully, False otherwise
+        """
+        loaded_profile = self._repository.load()
+        if loaded_profile is not None:
+            self.profile = loaded_profile
             self.authenticated = True
             return True
-        except FileNotFoundError:
-            return False
-        except (OSError, IOError):
-            return False
-        except jsonschema.ValidationError:
-            # Profile structure is invalid (corrupted or tampered)
-            return False
-        except Exception:
-            # Decryption failed (wrong password, corrupted file, etc.)
-            return False
+        return False
     
     def update_profile(self) -> None:
         if self.authenticated:
