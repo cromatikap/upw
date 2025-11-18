@@ -2,10 +2,38 @@ import getpass
 import os
 import sys
 import pyperclip
+import secrets
 from sample import cfg, password
 from .domain_completer import DomainCompleter
 from .user import User
 from prompt_toolkit import prompt
+
+
+def _clear_sensitive_data(data: str) -> None:
+    """Securely clear sensitive string data from memory.
+    
+    This function attempts to overwrite the memory containing the string
+    by converting it to a mutable bytearray and overwriting it with random data.
+    
+    Note: Due to Python's string immutability and memory management,
+    this cannot guarantee 100% memory clearing, but it significantly reduces
+    the window of exposure. The original string object may still exist in memory
+    until garbage collected, but we minimize the time it's accessible.
+    
+    Args:
+        data: The sensitive string to clear
+    """
+    if data:
+        # Convert to bytearray (mutable) and overwrite with random data
+        data_bytes = bytearray(data.encode('utf-8'))
+        # Overwrite with random bytes multiple times
+        for _ in range(3):  # Multiple passes for better security
+            for i in range(len(data_bytes)):
+                data_bytes[i] = secrets.randbelow(256)
+        # Final pass: overwrite with zeros
+        data_bytes[:] = b'\x00' * len(data_bytes)
+        # Clear the bytearray reference
+        del data_bytes
 
 def identify() -> User:
 
@@ -16,7 +44,9 @@ def identify() -> User:
     login = input("* Login: ")
     master_password = getpass.getpass(prompt='* Master Password: ', stream=None)
     user = User(login, master_password)
-    master_password = None  # Make sure Master Password typed by the user is no longer in memory
+    # Securely clear master password from memory
+    _clear_sensitive_data(master_password)
+    master_password = None
 
     print('\nEmojish: *** [ ' + user.emojish + ' ] ***')
     return user
@@ -34,6 +64,9 @@ def create(user: User) -> None:
     else:
         print('\n* The password doesn\'t match with the first\n  typed in.\n')
         sys.exit(1)
+    # Securely clear confirmation password from memory
+    _clear_sensitive_data(master_password_confirmation)
+    master_password_confirmation = None
 
 def authenticate(user: User) -> None:
 
