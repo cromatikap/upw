@@ -33,7 +33,7 @@ def create(user):
         print('\n ' + cfg.get('UPW_DIR') + user.hash + '\n')
     else:
         print('\n* The password doesn\'t match with the first\n  typed in.\n')
-        sys.exit(0)
+        sys.exit(1)
 
 def authenticate(user):
 

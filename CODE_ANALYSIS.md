@@ -230,10 +230,10 @@ with open(path, "wb") as f:
 - ✅ Generic `OSError` catch replaced with specific exceptions (`FileNotFoundError`, `OSError`, `IOError`)
 - ✅ Better handling of decryption failures (wrong password, corrupted file)
 - ✅ Proper exception chaining with `from e`
+- ✅ `sys.exit(0)` on password mismatch (line 33 in prompt.py) - now using non-zero exit code
 
 **Remaining Issues**:
 - ⚠️ No validation of decrypted data structure (could add JSON schema validation)
-- ⚠️ `sys.exit(0)` on password mismatch (line 33 in prompt.py) - should use non-zero exit code
 
 ### 3.3 Code Organization ⚠️ IMPROVED
 
