@@ -3,11 +3,11 @@ import math
 
 def generate(masterkey, domain):
     pk = Crypto.derive_key_from(masterkey, domain)
-    pkResized = pk[0:cfg.get('passwords_length')]
+    pk_resized = pk[0:cfg.get('passwords_length')]
 
     counters = dict(digit=0, letter=0)
     password = ''
-    for char in pkResized:
+    for char in pk_resized:
         if char.isdigit():
             password += process_digit(char, counters["digit"])
             counters["digit"] += 1
@@ -27,7 +27,7 @@ def process_letter(letter, n):
 def process_digit(digit, n):
     # replace each 2 digits by the next special character from the config.yml list
     if n % 2 == 1:
-        specialCharList = cfg.get("spec_char_list")
-        return specialCharList[math.ceil(n / 2) - 1]
+        special_char_list = cfg.get("spec_char_list")
+        return special_char_list[math.ceil(n / 2) - 1]
     else:
         return digit

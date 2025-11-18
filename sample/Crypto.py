@@ -1,9 +1,12 @@
-import base64, json, hashlib
+import base64
+import json
+import hashlib
 from . import cfg
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC    
-    
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+
 class Crypto:
 
     def __init__(self, password):

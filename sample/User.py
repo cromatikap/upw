@@ -1,4 +1,5 @@
-import os, stat
+import os
+import stat
 from sample import cfg, Crypto
 
 class User:
@@ -10,7 +11,7 @@ class User:
     def __init__(self, login, master_password):
         self.login = login
         self.masterkey = Crypto.derive_key_from(login, master_password)
-        self.Crypto = Crypto.Crypto(self.masterkey)
+        self.crypto = Crypto.Crypto(self.masterkey)
         self.hash = Crypto.hash(login + self.masterkey)[0:40]
         self.emojish = Crypto.emojish(self.hash)
 
@@ -31,7 +32,7 @@ class User:
         
         try:
             with open(profile_path, "wb") as f:
-                f.write(self.Crypto.encrypt(self.profile))
+                f.write(self.crypto.encrypt(self.profile))
             # Set file permissions to 600 (rw-------) for security
             os.chmod(profile_path, stat.S_IRUSR | stat.S_IWUSR)
             self.authenticated = True
@@ -45,7 +46,7 @@ class User:
         try:
             with open(profile_path, "rb") as f:  # Binary mode for encrypted data
                 encrypted_content = f.read()
-            self.profile = self.Crypto.decrypt(encrypted_content)
+            self.profile = self.crypto.decrypt(encrypted_content)
             self.authenticated = True
             return True
         except FileNotFoundError:

@@ -15,6 +15,6 @@ try:
 
 except KeyboardInterrupt:
     os.system('clear')
-    if('user' in vars()):
+    if 'user' in vars():
         user.update_profile()
     print('\n* Bye.')
