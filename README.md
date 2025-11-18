@@ -1,6 +1,6 @@
 # MicroPassword: `upw`
 
-## Simple, fast and secure passwords manager
+## Simple, discreet and secure passwords manager
 
 - off-line
 - no third-party involved
