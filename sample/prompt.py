@@ -1,4 +1,4 @@
-import getpass, os, sys, clipboard
+import getpass, os, sys, pyperclip
 from sample import cfg, password
 from .DomainCompleter import DomainCompleter
 from .User import User
@@ -74,7 +74,7 @@ def select_domain(user):
                 print(domain)
             input('-> Press enter to continue...')
         else:
-            clipboard.copy(password.generate(user.masterkey, domain))
+            pyperclip.copy(password.generate(user.masterkey, domain))
             print('\n*** Copied to clipboard. ***\n')
             if(user.add_domain(domain)):
                 print('This domain has been added to your profile!\n')

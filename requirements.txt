@@ -1,5 +1,4 @@
 pyyaml
 pyperclip
-clipboard
 prompt_toolkit
 cryptography
