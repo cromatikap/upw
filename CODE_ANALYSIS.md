@@ -21,17 +21,21 @@
 ### Project Structure
 ```
 upw/
-├── upw.py              # Main entry point
-├── sample/             # Core modules
-│   ├── prompt.py       # CLI interface
-│   ├── User.py         # User profile management
-│   ├── password.py     # Password generation
-│   ├── Crypto.py       # Encryption/decryption
-│   ├── cfg.py          # Configuration loader
-│   └── DomainCompleter.py  # Autocomplete
-├── tests/              # Unit tests
-├── config.yml          # Configuration
-└── requirements.txt    # Dependencies
+├── upw.py                    # Main entry point
+├── sample/                    # Core modules
+│   ├── prompt.py             # CLI interface
+│   ├── user.py                # User profile management
+│   ├── password.py            # Password generation
+│   ├── crypto.py              # Encryption/decryption
+│   ├── cfg.py                 # Configuration loader
+│   ├── domain_completer.py    # Autocomplete
+│   └── profile_repository.py  # Profile file I/O operations
+├── tests/                     # Unit tests
+│   ├── test_crypto.py         # Crypto tests
+│   ├── test_user.py           # User tests
+│   └── test_password.py       # Password tests
+├── config.yml                 # Configuration
+└── requirements.txt           # Dependencies
 ```
 
 ### Data Flow
@@ -55,7 +59,7 @@ salt: 'upw'
 ```
 Used in `derive_key_from()` for password generation - **MUST be fixed** for determinism.
 
-**Encryption Salt** (Crypto.py line 18):
+**Encryption Salt** (crypto.py line 18):
 ```python
 salt=b'J\xfd7\xa8\x91#bL\xcbY\x9d<\xdd}\xa4f',
 ```
@@ -89,39 +93,43 @@ Used for Fernet encryption key derivation - **Also fixed by design**.
 - ❌ No directory creation if `.upw/` doesn't exist
 - ❌ No file permissions set
 
-**Current Implementation** (User.py):
+**Current Implementation** (profile_repository.py):
 ```python
-def save_profile(self):
-    """Save the encrypted profile to disk."""
-    self._ensure_profile_dir()
-    profile_path = self._get_profile_path()
+class ProfileRepository:
+    """Handles all file I/O operations for user profiles."""
     
-    try:
-        with open(profile_path, "wb") as f:
-            f.write(self.crypto.encrypt(self.profile))
-        # Set file permissions to 600 (rw-------) for security
-        os.chmod(profile_path, stat.S_IRUSR | stat.S_IWUSR)
-        self.authenticated = True
-    except (OSError, IOError) as e:
-        raise RuntimeError(f"Failed to save profile: {e}") from e
+    def save(self, profile: Dict[str, Any]) -> None:
+        """Save encrypted profile to disk."""
+        self._ensure_profile_dir()
+        profile_path = self._get_profile_path()
+        
+        try:
+            with open(profile_path, "wb") as f:
+                f.write(self.crypto.encrypt(profile))
+            os.chmod(profile_path, stat.S_IRUSR | stat.S_IWUSR)
+        except (OSError, IOError) as e:
+            raise RuntimeError(f"Failed to save profile: {e}") from e
+    
+    def load(self) -> Optional[Dict[str, Any]]:
+        """Load and decrypt profile from disk."""
+        # ... handles all file operations and validation
+```
 
-def import_profile(self):
-    """Import and decrypt the profile from disk."""
-    profile_path = self._get_profile_path()
-    
-    try:
-        with open(profile_path, "rb") as f:  # Binary mode for encrypted data
-            encrypted_content = f.read()
-        self.profile = self.crypto.decrypt(encrypted_content)
+**User class** (user.py) now delegates to ProfileRepository:
+```python
+def save_profile(self) -> None:
+    """Save the current profile to disk."""
+    self._repository.save(self.profile)
+    self.authenticated = True
+
+def import_profile(self) -> bool:
+    """Import profile from disk if it exists."""
+    loaded_profile = self._repository.load()
+    if loaded_profile is not None:
+        self.profile = loaded_profile
         self.authenticated = True
         return True
-    except FileNotFoundError:
-        return False
-    except (OSError, IOError):
-        return False
-    except Exception:
-        # Decryption failed (wrong password, corrupted file, etc.)
-        return False
+    return False
 ```
 
 **Improvements Made**:
@@ -130,7 +138,8 @@ def import_profile(self):
 - ✅ Automatic directory creation with secure permissions (0o700)
 - ✅ File permissions set to 600 (rw-------) for profile files
 - ✅ Specific exception handling (FileNotFoundError, OSError, etc.)
-- ✅ Helper methods for better organization (`_ensure_profile_dir()`, `_get_profile_path()`)
+- ✅ Separation of concerns: File I/O extracted to `ProfileRepository` class
+- ✅ User class focuses on business logic, delegates persistence to repository
 
 #### 2.3 Configuration File Loading ✅ FIXED
 
@@ -233,15 +242,33 @@ with open(path, "wb") as f:
 - ✅ `sys.exit(1)` on password mismatch (line 36 in prompt.py) - now using non-zero exit code
 - ✅ JSON schema validation of decrypted data structure (prevents corrupted/tampered data)
 
-### 3.3 Code Organization ⚠️ IMPROVED
+### 3.3 Code Organization ✅ FIXED
 
-**Issues Fixed**:
-- ✅ Configuration loaded only once (removed duplicate loading from Crypto.py)
-- ✅ Helper methods added for better organization (`_ensure_profile_dir()`, `_get_profile_path()`)
+**Previous Issues** (now resolved):
+- ❌ Mixed responsibilities (User class handled file I/O and business logic)
+- ❌ No separation of concerns (file operations mixed with business logic)
+- ❌ Configuration loaded multiple times
 
-**Remaining Issues**:
-- ⚠️ Mixed responsibilities (User class handles file I/O and business logic)
-- ⚠️ No separation of concerns (could extract file operations to separate class)
+**Current Implementation**:
+- ✅ **ProfileRepository class** (`profile_repository.py`): Handles all file I/O operations
+  - File reading/writing
+  - Directory management
+  - Encryption/decryption coordination
+  - Schema validation
+  - File permissions
+- ✅ **User class** (`user.py`): Focuses on business logic only
+  - User identity management
+  - Domain management (add/remove/get)
+  - Authentication state
+  - Delegates persistence to ProfileRepository
+- ✅ Configuration loaded only once (removed duplicate loading)
+- ✅ Clear separation of concerns following Single Responsibility Principle
+
+**Benefits**:
+- ✅ Better testability (can mock repository independently)
+- ✅ Easier to maintain (file handling changes don't affect User logic)
+- ✅ More flexible (easy to add new storage backends)
+- ✅ Follows SOLID principles
 
 ### 3.4 Type Hints ✅ FIXED
 
@@ -260,11 +287,12 @@ with open(path, "wb") as f:
 - ✅ Union types for optional values (`User | None`)
 
 **Files Updated**:
-- `sample/User.py` - All methods, instance variables, and class attributes
-- `sample/Crypto.py` - Class methods and module-level functions
+- `sample/user.py` - All methods, instance variables, and class attributes
+- `sample/crypto.py` - Class methods and module-level functions
 - `sample/password.py` - All password generation functions
 - `sample/prompt.py` - All CLI interaction functions
 - `sample/cfg.py` - Configuration loading function and module variables
+- `sample/profile_repository.py` - All file I/O methods
 - `upw.py` - Main entry point function
 
 **Benefits**:
@@ -294,9 +322,15 @@ with open(path, "wb") as f:
 **Files Updated**:
 - `sample/prompt.py` - Variable names, import formatting, code style
 - `sample/password.py` - Variable names (`pkResized` → `pk_resized`, `specialCharList` → `special_char_list`)
-- `sample/User.py` - Instance variable (`self.Crypto` → `self.crypto`)
-- `sample/Crypto.py` - Import formatting
+- `sample/user.py` - Instance variable (`self.Crypto` → `self.crypto`)
+- `sample/crypto.py` - Import formatting
 - `upw.py` - Removed unnecessary parentheses
+- ✅ **File naming**: All module files now use snake_case (PEP 8 compliant)
+  - `User.py` → `user.py`
+  - `Crypto.py` → `crypto.py`
+  - `DomainCompleter.py` → `domain_completer.py`
+  - `test_User.py` → `test_user.py`
+  - `test_Crypto.py` → `test_crypto.py`
 
 ### 3.6 Magic Numbers and Strings
 
@@ -344,7 +378,7 @@ hash:
 - Salt is just string 'upw' (should be bytes, more random)
 - Key length not specified (uses default)
 
-**Crypto.py** (Line 31) ✅ FIXED:
+**crypto.py** (Line 31) ✅ FIXED:
 ```python
 hash_config = cfg.get('hash')
 pk = hashlib.pbkdf2_hmac(hash_config['name'], key1.encode() + key2.encode(), hash_config['salt'].encode(), hash_config['dklen'])
@@ -360,9 +394,9 @@ pk = hashlib.pbkdf2_hmac(hash_config['name'], key1.encode() + key2.encode(), has
 ### Current Test Coverage
 
 **Test Files**:
-- `test_Crypto.py` - Basic encryption/decryption, key derivation
+- `test_crypto.py` - Basic encryption/decryption, key derivation
 - `test_password.py` - Password generation logic
-- `test_User.py` - User class functionality
+- `test_user.py` - User class functionality
 
 **Coverage Gaps**:
 - ❌ No integration tests
@@ -370,7 +404,7 @@ pk = hashlib.pbkdf2_hmac(hash_config['name'], key1.encode() + key2.encode(), has
 - ❌ No tests for error cases (corrupted files, wrong passwords)
 - ❌ No tests for edge cases (empty domains, special characters)
 - ❌ No tests for `prompt.py` (CLI interaction)
-- ❌ No tests for `DomainCompleter.py`
+- ❌ No tests for `domain_completer.py`
 
 **Test Quality**:
 - ✅ Tests use unittest framework
@@ -414,7 +448,7 @@ cryptography    # Encryption (Fernet, PBKDF2)
 1. ✅ **Add type hints** - Improve maintainability (COMPLETED)
 2. ✅ **Use context managers** - Proper resource management (COMPLETED)
 3. ✅ **Follow PEP 8** - Consistent naming conventions (COMPLETED)
-4. ⚠️ **Separate concerns** - Split file I/O from business logic (partially improved with helper methods)
+4. ✅ **Separate concerns** - Extract ProfileRepository for file I/O operations (COMPLETED)
 5. ⚠️ **Add input validation** - Validate user inputs
 
 ### Priority 3: Testing
@@ -444,8 +478,8 @@ cryptography    # Encryption (Fernet, PBKDF2)
 
 ### Complexity
 - **Low complexity** - Most functions are simple
-- **Good separation** - Clear module boundaries
-- **Some coupling** - User class tightly coupled to file system
+- **Good separation** - Clear module boundaries with ProfileRepository pattern
+- **Reduced coupling** - User class no longer directly coupled to file system
 
 ### Maintainability
 - **Moderate** - Code is readable but needs refactoring
@@ -479,14 +513,15 @@ Recent improvements made:
 1. ✅ **File Handling**: Context managers, binary mode, directory creation, file permissions
 2. ✅ **Error Handling**: Specific exceptions, better error messages, decryption failure handling
 3. ✅ **Config Loading**: Relative paths, single loading, proper error handling
-4. ✅ **PEP 8 Compliance**: All variables use snake_case, imports on separate lines, proper code style
+4. ✅ **PEP 8 Compliance**: All variables and filenames use snake_case, imports on separate lines, proper code style
 5. ✅ **Type Hints**: Comprehensive type annotations across all modules for better maintainability and IDE support
 6. ✅ **JSON Schema Validation**: Profile data structure validation to prevent corrupted data issues
+7. ✅ **Separation of Concerns**: ProfileRepository pattern extracts file I/O from User class, following SOLID principles
 
 Remaining improvements needed:
 
 1. **Security**: Document security model, add password strength validation
-2. **Code Quality**: Separate concerns further (extract file I/O from business logic)
+2. **Code Quality**: Add input validation for user inputs
 3. **Testing**: Expand test coverage, add integration tests, test file I/O operations
 4. **Documentation**: Add docstrings, document security model and master password requirements
 
