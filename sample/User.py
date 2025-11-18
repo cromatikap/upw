@@ -1,6 +1,22 @@
 import os
 import stat
+import jsonschema
 from sample import cfg, Crypto
+
+# JSON schema for profile structure validation
+PROFILE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "domains": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    },
+    "required": ["domains"],
+    "additionalProperties": False
+}
 
 class User:
     """Define a user gerated from the couple login/master_password
@@ -25,6 +41,17 @@ class User:
         """Get the full path to the profile file."""
         return os.path.join(cfg.get('UPW_DIR'), self.hash)
 
+    def _validate_profile(self, profile_data):
+        """Validate the decrypted profile data against the JSON schema.
+        
+        Args:
+            profile_data: The decrypted profile dictionary to validate
+            
+        Raises:
+            jsonschema.ValidationError: If the profile data doesn't match the schema
+        """
+        jsonschema.validate(instance=profile_data, schema=PROFILE_SCHEMA)
+
     def save_profile(self):
         """Save the encrypted profile to disk."""
         self._ensure_profile_dir()
@@ -46,12 +73,18 @@ class User:
         try:
             with open(profile_path, "rb") as f:  # Binary mode for encrypted data
                 encrypted_content = f.read()
-            self.profile = self.crypto.decrypt(encrypted_content)
+            decrypted_profile = self.crypto.decrypt(encrypted_content)
+            # Validate the decrypted data structure
+            self._validate_profile(decrypted_profile)
+            self.profile = decrypted_profile
             self.authenticated = True
             return True
         except FileNotFoundError:
             return False
         except (OSError, IOError):
+            return False
+        except jsonschema.ValidationError:
+            # Profile structure is invalid (corrupted or tampered)
             return False
         except Exception:
             # Decryption failed (wrong password, corrupted file, etc.)

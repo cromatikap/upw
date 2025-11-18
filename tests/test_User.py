@@ -24,3 +24,23 @@ class TestUser(unittest.TestCase):
         self.assertTrue(self.u.del_domain('domain.ltd'))
         self.assertEqual(self.u.get_domains(), ['domain2.ltd'])
         self.assertFalse(self.u.del_domain('unknown.ltd'))
+
+    def test_profile_schema_validation(self):
+        """Test that invalid profile structures are rejected."""
+        import jsonschema
+        
+        # Valid profile should pass validation
+        valid_profile = {"domains": ["example.com", "test.com"]}
+        self.u._validate_profile(valid_profile)
+        
+        # Invalid profiles should raise ValidationError
+        invalid_profiles = [
+            {"domains": "not_a_list"},  # domains should be a list
+            {"domains": [123]},  # domain items should be strings
+            {},  # Missing required field
+            {"domains": [], "extra": "field"},  # Additional properties not allowed
+        ]
+        
+        for invalid_profile in invalid_profiles:
+            with self.assertRaises(jsonschema.ValidationError):
+                self.u._validate_profile(invalid_profile)

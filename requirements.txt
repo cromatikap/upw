@@ -2,3 +2,4 @@ pyyaml
 pyperclip
 prompt_toolkit
 cryptography
+jsonschema
