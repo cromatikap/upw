@@ -1,13 +1,8 @@
-import base64
-import json
+import base64, json, hashlib
+from . import cfg
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-import yaml, hashlib
-from . import cfg
-
-with open('config.yml', 'r') as file:
-    cfg = yaml.safe_load(file)
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC    
     
 class Crypto:
 
@@ -30,8 +25,8 @@ class Crypto:
         return json.loads(s)
 
 def derive_key_from(key1, key2):
-    hash = cfg.get('hash')
-    pk = hashlib.pbkdf2_hmac(hash['name'], key1.encode() + key2.encode(), hash['salt'].encode(), cfg['hash']['dklen'])
+    hash_config = cfg.get('hash')
+    pk = hashlib.pbkdf2_hmac(hash_config['name'], key1.encode() + key2.encode(), hash_config['salt'].encode(), hash_config['dklen'])
     return pk.hex()
 
 def hash(input):
